@@ -34,6 +34,8 @@ module.exports = {
                   id: response.data.id,
                   name: response.data.name,
                   email: response.data.email,
+                  localeCode: response.data.language,
+                  groups: response.data.group,
                   providerKey: req.params.strategy,
                   isSystem: false,
                   isVerified: true,

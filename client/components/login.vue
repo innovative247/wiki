@@ -21,7 +21,7 @@
         //-------------------------------------------------
         //- PROVIDERS LIST
         //-------------------------------------------------
-        template(v-if='screen === `login` && strategies.length > 1')
+        template(v-if='screen === `login` && strategies.length > 1 && isAdmin')
           .login-subtitle
             .text-subtitle-1 {{$t('auth:selectAuthProvider')}}
           .login-list
@@ -317,6 +317,10 @@ export default {
     },
     isUsernameEmail () {
       return this.selectedStrategy.strategy.usernameType === `email`
+    },
+    isAdmin () {
+      const qParams = new URLSearchParams(window.location.search)
+      return qParams.has('all')
     }
   },
   watch: {
