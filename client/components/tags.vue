@@ -177,6 +177,7 @@ export default {
       orderByDirection: 0,
       pagination: {
         page: 1,
+        search: '',
         itemsPerPage: 12,
         mustSort: true,
         sortBy: ['title'],
@@ -215,7 +216,8 @@ export default {
       return _.filter(this.tags, t => _.includes(this.selection, t.tag))
     },
     pageTotal () {
-      return Math.ceil(this.pages.length / this.pagination.itemsPerPage)
+      const filteredPage = _.filter(this.pages, t => _.includes(t.title.toUpperCase(), this.innerSearch.toUpperCase()))
+      return Math.ceil(filteredPage.length / this.pagination.itemsPerPage)
     },
     orderByItems () {
       return [
@@ -230,6 +232,7 @@ export default {
   watch: {
     innerSearch(newValue, oldValue) {
       this.rebuildURL()
+      this.pagination.search = newValue
     },
     locale (newValue, oldValue) {
       this.rebuildURL()
@@ -271,6 +274,7 @@ export default {
     }
     if (this.$route.query.search) {
       this.innerSearch = this.$route.query.search
+      this.pagination.search = this.innerSearch
     }
   },
   methods: {

@@ -86,8 +86,7 @@
                 text
                 rounded
                 color='grey darken-3'
-                @click.stop.prevent='forgotPassword'
-                href='#forgot'
+                href='https://support.innovative247.com/#forgot'
                 ): .caption {{ $t('auth:forgotPasswordLink') }}
               v-btn.text-none(
                 v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration'
