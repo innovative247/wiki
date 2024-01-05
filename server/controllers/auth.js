@@ -31,6 +31,7 @@ router.get('/login', async (req, res, next) => {
         strategy: stg.key,
         token: req.query.token
       }, { req, res })
+      res.cookie('userLocals', req.user['localeCode'])
       res.cookie('jwt', authResult.jwt, { expires: moment().add(1, 'y').toDate() })
       const loginRedirect = req.cookies['loginRedirect']
       if (loginRedirect === '/' && authResult.redirect) {
@@ -150,6 +151,7 @@ router.get('/logout', async (req, res) => {
   req.logout()
   res.clearCookie('jwt')
   res.clearCookie('redirectUrl')
+  res.clearCookie('userLocals')
   res.redirect(redirURL)
 })
 

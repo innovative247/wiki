@@ -249,7 +249,9 @@ module.exports = class User extends Model {
         // Manually assign the group(s)
         await user.$relatedQuery('groups').relate(groups.id)
       }
-
+      if (profile.localeCode) {
+        await WIKI.models.users.query().patch({ localeCode: profile.localeCode }).where('id', user.id)
+      }
       if (pictureUrl === 'internal') {
         await WIKI.models.users.updateUserAvatarData(user.id, profile.picture)
       }
@@ -274,7 +276,7 @@ module.exports = class User extends Model {
         email: primaryEmail,
         name: displayName,
         pictureUrl: pictureUrl,
-        localeCode: WIKI.config.lang.code,
+        localeCode: profile.localeCode ? profile.localeCode : WIKI.config.lang.code,
         defaultEditor: 'markdown',
         tfaIsActive: false,
         isSystem: false,

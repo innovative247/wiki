@@ -505,8 +505,7 @@ router.get('/*', async (req, res, next) => {
           action: 'view'
         })
       }
-
-      _.set(res, 'locals.siteConfig.lang', pageArgs.locale)
+      _.set(res, 'locals.siteConfig.lang', req.cookies.userLocals ? req.cookies.userLocals : pageArgs.locale)
       _.set(res, 'locals.siteConfig.rtl', req.i18n.dir() === 'rtl')
 
       if (page) {
