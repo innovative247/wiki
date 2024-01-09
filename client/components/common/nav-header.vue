@@ -466,12 +466,12 @@ export default {
     },
     async changeLocale (locale) {
       await this.$i18n.i18next.changeLanguage(locale.code)
-      // switch (this.mode) {
-      //   case 'view':
-      //   case 'history':
-      //     window.location.assign(`/${locale.code}/${this.path}`)
-      //     break
-      // }
+      switch (this.mode) {
+        case 'view':
+        case 'history':
+          window.location.assign(`/${locale.code}/${this.path}`)
+          break
+      }
     },
     logout () {
       window.location.assign('/logout')
