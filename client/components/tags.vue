@@ -177,6 +177,7 @@ export default {
       orderByDirection: 0,
       pagination: {
         page: 1,
+        search: '',
         itemsPerPage: 12,
         mustSort: true,
         sortBy: ['title'],
@@ -215,7 +216,8 @@ export default {
       return _.filter(this.tags, t => _.includes(this.selection, t.tag))
     },
     pageTotal () {
-      return Math.ceil(this.pages.length / this.pagination.itemsPerPage)
+      const filteredPage = _.filter(this.pages, t => _.includes(t.title.toUpperCase(), this.innerSearch.toUpperCase()))
+      return Math.ceil(filteredPage.length / this.pagination.itemsPerPage)
     },
     orderByItems () {
       return [
@@ -228,6 +230,10 @@ export default {
     }
   },
   watch: {
+    innerSearch(newValue, oldValue) {
+      this.rebuildURL()
+      this.pagination.search = newValue
+    },
     locale (newValue, oldValue) {
       this.rebuildURL()
     },
@@ -266,6 +272,10 @@ export default {
       this.orderByDirection = this.$route.query.dir === 'asc' ? 0 : 1
       this.pagination.sortDesc = [this.orderByDirection === 1]
     }
+    if (this.$route.query.search) {
+      this.innerSearch = this.$route.query.search
+      this.pagination.search = this.innerSearch
+    }
   },
   methods: {
     toggleTag (tag) {
@@ -285,6 +295,9 @@ export default {
       }
       if (this.locale !== `any`) {
         _.set(urlObj, 'query.lang', this.locale)
+      }
+      if (this.innerSearch !== ``) {
+        _.set(urlObj, 'query.search', this.innerSearch)
       }
       if (this.orderBy !== `TITLE`) {
         _.set(urlObj, 'query.sort', this.orderBy.toLowerCase())

@@ -239,7 +239,19 @@ module.exports = class User extends Model {
         name: displayName,
         pictureUrl: pictureUrl
       })
-
+      if (profile.groups) {
+        const usrGroupsRaw = await user.$relatedQuery('groups')
+        const usrGroups = _.map(usrGroupsRaw, 'id')
+        for (const grp of usrGroups) {
+          await user.$relatedQuery('groups').unrelate().where('groupId', grp)
+        }
+        const groups = await WIKI.models.groups.query().findOne({ name: profile.groups })
+        // Manually assign the group(s)
+        await user.$relatedQuery('groups').relate(groups.id)
+      }
+      if (profile.localeCode) {
+        await WIKI.models.users.query().patch({ localeCode: profile.localeCode }).where('id', user.id)
+      }
       if (pictureUrl === 'internal') {
         await WIKI.models.users.updateUserAvatarData(user.id, profile.picture)
       }
@@ -264,7 +276,7 @@ module.exports = class User extends Model {
         email: primaryEmail,
         name: displayName,
         pictureUrl: pictureUrl,
-        localeCode: WIKI.config.lang.code,
+        localeCode: profile.localeCode ? profile.localeCode : WIKI.config.lang.code,
         defaultEditor: 'markdown',
         tfaIsActive: false,
         isSystem: false,
@@ -272,9 +284,15 @@ module.exports = class User extends Model {
         isVerified: true
       })
 
-      // Assign to group(s)
-      if (provider.autoEnrollGroups.length > 0) {
-        await user.$relatedQuery('groups').relate(provider.autoEnrollGroups)
+      if (profile.groups) {
+        const groups = await WIKI.models.groups.query().findOne({ name: profile.groups })
+        // Manually assign the group(s)
+        await user.$relatedQuery('groups').relate(groups.id)
+      } else {
+        // Assign to group(s)
+        if (provider.autoEnrollGroups.length > 0) {
+          await user.$relatedQuery('groups').relate(provider.autoEnrollGroups)
+        }
       }
 
       if (pictureUrl === 'internal') {
@@ -304,6 +322,10 @@ module.exports = class User extends Model {
         _.set(context.req, 'body.email', opts.username)
         _.set(context.req, 'body.password', opts.password)
         _.set(context.req.params, 'strategy', opts.strategy)
+      }
+
+      if (opts.token) {
+        _.set(context.req, 'body.token', opts.token)
       }
 
       // Authenticate
