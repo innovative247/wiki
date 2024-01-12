@@ -602,6 +602,8 @@ export default {
     this.$store.set('page/mode', 'view')
   },
   mounted () {
+    const localeCode = window.location.pathname.split('/')[1]
+    window.document.documentElement.setAttribute('lang', localeCode)
     if (this.$vuetify.theme.dark) {
       this.scrollStyle.bar.background = '#424242'
     }
