@@ -482,6 +482,9 @@ export default {
       switch (this.mode) {
         case 'view':
         case 'history':
+          if (locale.code === 'en') {
+            document.cookie = 'googtrans' + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
+          }
           window.location.assign(`/${locale.code}/${this.path}/#googtrans(en|${locale.code})`)
           break
       }
@@ -497,6 +500,9 @@ export default {
 </script>
 
 <style lang='scss'>
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf{
+  display: none;
+}
 .skiptranslate{
   display:none !important;
 }
