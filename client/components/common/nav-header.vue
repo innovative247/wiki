@@ -113,7 +113,7 @@
               v-list(nav)
                 template(v-for='(lc, idx) of locales')
                   v-list-item(@click='changeLocale(lc)')
-                    v-list-item-action(style='min-width:auto;'): v-chip(:color='lc.code === locale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
+                    v-list-item-action(style='min-width:auto;'): v-chip(:color='lc.code === siteLocale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
                     v-list-item-title {{lc.name}}
             v-divider(vertical)
 
@@ -283,6 +283,7 @@ export default {
       deletePageModal: false,
       locales: siteLangs,
       isDevMode: false,
+      siteLocale: 'en',
       duplicateOpts: {
         locale: 'en',
         path: 'new-page',
@@ -349,6 +350,17 @@ export default {
     }
   },
   mounted () {
+    // Dynamically create a script element for the Google Translate API
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'
+    // Append the script to the document's head
+    document.head.appendChild(script)
+
+    // Define the googleTranslateElementInit function
+    window.googleTranslateElementInit = () => {
+      window.google.translate.TranslateElement({ pageLanguage: 'en' }, 'google_translate_element')
+    }
     this.$root.$on('pageEdit', () => {
       this.pageEdit()
     })
@@ -371,6 +383,7 @@ export default {
       this.pageDelete()
     })
     this.isDevMode = siteConfig.devMode === true
+    this.siteLocale = window.location.pathname.split('/')[1]
   },
   methods: {
     searchFocus () {
@@ -469,7 +482,7 @@ export default {
       switch (this.mode) {
         case 'view':
         case 'history':
-          window.location.assign(`/${locale.code}/${this.path}`)
+          window.location.assign(`/${locale.code}/${this.path}/#googtrans(en|${locale.code})`)
           break
       }
     },
@@ -484,7 +497,9 @@ export default {
 </script>
 
 <style lang='scss'>
-
+.skiptranslate{
+  display:none !important;
+}
 .nav-header {
   //z-index: 1000;
 
