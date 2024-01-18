@@ -117,7 +117,7 @@
                   :key='`tag-` + tag.tag'
                   )
                   v-icon(:color='$vuetify.theme.dark ? `teal lighten-3` : `teal`', left, small) mdi-tag
-                  span(:class='$vuetify.theme.dark ? `teal--text text--lighten-5` : `teal--text text--darken-2`') {{tag.title}}
+                  span(:class='$vuetify.theme.dark ? `teal--text text--lighten-5 notranslate` : `teal--text text--darken-2 notranslate`') {{tag.title}}
                 //- v-chip.mr-1.mb-1(
                 //-   label
                 //-   :color='$vuetify.theme.dark ? `teal darken-1` : `teal lighten-5`'
