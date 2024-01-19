@@ -42,6 +42,7 @@ module.exports = {
                   isActive: true
                 }
               })
+              req.res.cookie('googtrans', String(`/en/${response.data.language}`))
               return done(null, user)
             } else {
               if (response.status === 401) {

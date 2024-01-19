@@ -113,8 +113,8 @@
               v-list(nav)
                 template(v-for='(lc, idx) of locales')
                   v-list-item(@click='changeLocale(lc)')
-                    v-list-item-action(style='min-width:auto;'): v-chip(:color='lc.code === siteLocale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
-                    v-list-item-title {{lc.name}}
+                    v-list-item-action(:class='`notranslate`', style='min-width:auto;'): v-chip(:color='lc.code === siteLocale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
+                    v-list-item-title(:class='`notranslate`') {{lc.name}}
             v-divider(vertical)
 
           //- PAGE ACTIONS
@@ -383,7 +383,7 @@ export default {
       this.pageDelete()
     })
     this.isDevMode = siteConfig.devMode === true
-    this.siteLocale = window.location.pathname.split('/')[1]
+    this.getSiteLocale()
   },
   methods: {
     searchFocus () {
@@ -482,10 +482,11 @@ export default {
       switch (this.mode) {
         case 'view':
         case 'history':
-          if (locale.code === 'en') {
-            document.cookie = 'googtrans' + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-          }
-          window.location.assign(`/${locale.code}/${this.path}/#googtrans(en|${locale.code})`)
+          this.$cookie.delete('googtrans')
+          _.delay(() => {
+            this.$cookie.set('googtrans', String(`/en/${locale.code}`))
+            window.location.assign(`/${locale.code}/${this.path}`)
+          }, 500)
           break
       }
     },
@@ -494,6 +495,12 @@ export default {
     },
     goHome () {
       window.location.assign('/')
+    },
+    getSiteLocale() {
+      _.delay(() => {
+        const localCode = this.$cookie.get('googtrans')
+        this.siteLocale = localCode ? localCode.split('/')[2] : 'en'
+      }, 1000)
     }
   }
 }

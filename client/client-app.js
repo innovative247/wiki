@@ -1,6 +1,7 @@
 /* global siteConfig */
 
 import Vue from 'vue'
+import VueCookie from 'vue-cookie'
 import VueRouter from 'vue-router'
 import VueClipboards from 'vue-clipboards'
 import { ApolloClient } from 'apollo-client'
@@ -133,6 +134,7 @@ window.graphQL = new ApolloClient({
 
 Vue.config.productionTip = false
 
+Vue.use(VueCookie)
 Vue.use(VueRouter)
 Vue.use(VueApollo)
 Vue.use(VueClipboards)
