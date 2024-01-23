@@ -247,7 +247,7 @@
                       v-model='pageEditFab'
                       @click='pageEdit'
                       v-on='onEditActivator'
-                      :disabled='!hasWritePagesPermission'
+                      :disabled='!hasEditPagesPermission'
                       :aria-label='$t(`common:page.editPage`)'
                       )
                       v-icon mdi-pencil
@@ -275,7 +275,7 @@
                         )
                         v-icon(size='20') mdi-code-tags
                     span {{$t('common:header.viewSource')}}
-                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasWritePagesPermission')
+                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasEditPagesPermission')
                     template(v-slot:activator='{ on }')
                       v-btn(
                         fab
@@ -287,7 +287,7 @@
                         )
                         v-icon(size='20') mdi-lightning-bolt
                     span {{$t('common:header.convert')}}
-                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasWritePagesPermission')
+                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasEditPagesPermission')
                     template(v-slot:activator='{ on }')
                       v-btn(
                         fab
@@ -562,12 +562,13 @@ export default {
     tocPosition: get('site/tocPosition'),
     hasAdminPermission: get('page/effectivePermissions@system.manage'),
     hasWritePagesPermission: get('page/effectivePermissions@pages.write'),
+    hasEditPagesPermission: get('page/effectivePermissions@pages.edit'),
     hasManagePagesPermission: get('page/effectivePermissions@pages.manage'),
     hasDeletePagesPermission: get('page/effectivePermissions@pages.delete'),
     hasReadSourcePermission: get('page/effectivePermissions@source.read'),
     hasReadHistoryPermission: get('page/effectivePermissions@history.read'),
     hasAnyPagePermissions () {
-      return this.hasAdminPermission || this.hasWritePagesPermission || this.hasManagePagesPermission ||
+      return this.hasAdminPermission || this.hasEditPagesPermission || this.hasManagePagesPermission ||
         this.hasDeletePagesPermission || this.hasReadSourcePermission || this.hasReadHistoryPermission
     },
     printView: sync('site/printView'),
