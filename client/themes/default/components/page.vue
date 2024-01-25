@@ -117,7 +117,7 @@
                   :key='`tag-` + tag.tag'
                   )
                   v-icon(:color='$vuetify.theme.dark ? `teal lighten-3` : `teal`', left, small) mdi-tag
-                  span(:class='$vuetify.theme.dark ? `teal--text text--lighten-5` : `teal--text text--darken-2`') {{tag.title}}
+                  span(:class='$vuetify.theme.dark ? `teal--text text--lighten-5 notranslate` : `teal--text text--darken-2 notranslate`') {{tag.title}}
                 //- v-chip.mr-1.mb-1(
                 //-   label
                 //-   :color='$vuetify.theme.dark ? `teal darken-1` : `teal lighten-5`'
@@ -247,7 +247,7 @@
                       v-model='pageEditFab'
                       @click='pageEdit'
                       v-on='onEditActivator'
-                      :disabled='!hasWritePagesPermission'
+                      :disabled='!hasEditPagesPermission'
                       :aria-label='$t(`common:page.editPage`)'
                       )
                       v-icon mdi-pencil
@@ -275,7 +275,7 @@
                         )
                         v-icon(size='20') mdi-code-tags
                     span {{$t('common:header.viewSource')}}
-                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasWritePagesPermission')
+                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasEditPagesPermission')
                     template(v-slot:activator='{ on }')
                       v-btn(
                         fab
@@ -287,7 +287,7 @@
                         )
                         v-icon(size='20') mdi-lightning-bolt
                     span {{$t('common:header.convert')}}
-                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasWritePagesPermission')
+                  v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasEditPagesPermission')
                     template(v-slot:activator='{ on }')
                       v-btn(
                         fab
@@ -562,12 +562,13 @@ export default {
     tocPosition: get('site/tocPosition'),
     hasAdminPermission: get('page/effectivePermissions@system.manage'),
     hasWritePagesPermission: get('page/effectivePermissions@pages.write'),
+    hasEditPagesPermission: get('page/effectivePermissions@pages.edit'),
     hasManagePagesPermission: get('page/effectivePermissions@pages.manage'),
     hasDeletePagesPermission: get('page/effectivePermissions@pages.delete'),
     hasReadSourcePermission: get('page/effectivePermissions@source.read'),
     hasReadHistoryPermission: get('page/effectivePermissions@history.read'),
     hasAnyPagePermissions () {
-      return this.hasAdminPermission || this.hasWritePagesPermission || this.hasManagePagesPermission ||
+      return this.hasAdminPermission || this.hasEditPagesPermission || this.hasManagePagesPermission ||
         this.hasDeletePagesPermission || this.hasReadSourcePermission || this.hasReadHistoryPermission
     },
     printView: sync('site/printView'),
@@ -602,6 +603,8 @@ export default {
     this.$store.set('page/mode', 'view')
   },
   mounted () {
+    const localeCode = window.location.pathname.split('/')[1]
+    window.document.documentElement.setAttribute('lang', localeCode)
     if (this.$vuetify.theme.dark) {
       this.scrollStyle.bar.background = '#424242'
     }

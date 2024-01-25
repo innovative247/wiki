@@ -113,8 +113,8 @@
               v-list(nav)
                 template(v-for='(lc, idx) of locales')
                   v-list-item(@click='changeLocale(lc)')
-                    v-list-item-action(style='min-width:auto;'): v-chip(:color='lc.code === locale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
-                    v-list-item-title {{lc.name}}
+                    v-list-item-action(:class='`notranslate`', style='min-width:auto;'): v-chip(:color='lc.code === siteLocale ? `blue` : `grey`', small, label, dark) {{lc.code.toUpperCase()}}
+                    v-list-item-title(:class='`notranslate`') {{lc.name}}
             v-divider(vertical)
 
           //- PAGE ACTIONS
@@ -283,6 +283,7 @@ export default {
       deletePageModal: false,
       locales: siteLangs,
       isDevMode: false,
+      siteLocale: 'en',
       duplicateOpts: {
         locale: 'en',
         path: 'new-page',
@@ -349,6 +350,17 @@ export default {
     }
   },
   mounted () {
+    // Dynamically create a script element for the Google Translate API
+    const script = document.createElement('script')
+    script.type = 'text/javascript'
+    script.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'
+    // Append the script to the document's head
+    document.head.appendChild(script)
+
+    // Define the googleTranslateElementInit function
+    window.googleTranslateElementInit = () => {
+      window.google.translate.TranslateElement({ pageLanguage: 'en' }, 'google_translate_element')
+    }
     this.$root.$on('pageEdit', () => {
       this.pageEdit()
     })
@@ -371,6 +383,7 @@ export default {
       this.pageDelete()
     })
     this.isDevMode = siteConfig.devMode === true
+    this.getSiteLocale()
   },
   methods: {
     searchFocus () {
@@ -466,25 +479,40 @@ export default {
     },
     async changeLocale (locale) {
       await this.$i18n.i18next.changeLanguage(locale.code)
-      // switch (this.mode) {
-      //   case 'view':
-      //   case 'history':
-      //     window.location.assign(`/${locale.code}/${this.path}`)
-      //     break
-      // }
+      switch (this.mode) {
+        case 'view':
+        case 'history':
+          this.$cookie.delete('googtrans')
+          _.delay(() => {
+            this.$cookie.set('googtrans', String(`/en/${locale.code}`))
+            window.location.assign(`/${locale.code}/${this.path}`)
+          }, 500)
+          break
+      }
     },
     logout () {
       window.location.assign('/logout')
     },
     goHome () {
       window.location.assign('/')
+    },
+    getSiteLocale() {
+      _.delay(() => {
+        const localCode = this.$cookie.get('googtrans')
+        this.siteLocale = localCode ? localCode.split('/')[2] : 'en'
+      }, 1000)
     }
   }
 }
 </script>
 
 <style lang='scss'>
-
+.VIpgJd-ZVi9od-aZ2wEe-wOHMyf{
+  display: none;
+}
+.skiptranslate{
+  display:none !important;
+}
 .nav-header {
   //z-index: 1000;
 

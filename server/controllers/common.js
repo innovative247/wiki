@@ -481,7 +481,7 @@ router.get('/*', async (req, res, next) => {
       // -> Get Page from cache
       const page = await WIKI.models.pages.getPage({
         path: pageArgs.path,
-        locale: pageArgs.locale,
+        locale: 'en',
         userId: req.user.id,
         isPrivate: false
       })
@@ -505,7 +505,7 @@ router.get('/*', async (req, res, next) => {
           action: 'view'
         })
       }
-      _.set(res, 'locals.siteConfig.lang', req.cookies.userLocals ? req.cookies.userLocals : pageArgs.locale)
+      _.set(res, 'locals.siteConfig.lang', pageArgs.locale)
       _.set(res, 'locals.siteConfig.rtl', req.i18n.dir() === 'rtl')
 
       if (page) {
@@ -604,7 +604,8 @@ router.get('/*', async (req, res, next) => {
             injectCode,
             comments: commentTmpl,
             effectivePermissions,
-            pageFilename
+            pageFilename,
+            locale: pageArgs.locale
           })
         }
       } else if (pageArgs.path === 'home') {

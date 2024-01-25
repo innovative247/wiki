@@ -19,23 +19,6 @@
           )
           .body-2 {{errorMessage}}
         //-------------------------------------------------
-        //- PROVIDERS LIST
-        //-------------------------------------------------
-        template(v-if='screen === `login` && strategies.length > 1 && isAdmin')
-          .login-subtitle
-            .text-subtitle-1 {{$t('auth:selectAuthProvider')}}
-          .login-list
-            v-list.elevation-1.radius-7(nav, light)
-              v-list-item-group(v-model='selectedStrategyKey')
-                v-list-item(
-                  v-for='(stg, idx) of filteredStrategies'
-                  :key='stg.key'
-                  :value='stg.key'
-                  :color='stg.strategy.color'
-                  )
-                  v-avatar.mr-3(tile, size='24', v-html='stg.strategy.icon')
-                  span.text-none {{stg.displayName}}
-        //-------------------------------------------------
         //- LOGIN FORM
         //-------------------------------------------------
         template(v-if='screen === `login` && selectedStrategy.strategy.useForm')
@@ -87,7 +70,15 @@
                 rounded
                 color='grey darken-3'
                 href='https://support.innovative247.com/#forgot'
+                target="_blank"
                 ): .caption {{ $t('auth:forgotPasswordLink') }}
+              v-btn.text-none(
+                v-if='!isAdmin'
+                text
+                rounded
+                color='grey darken-3'
+                href='/login?all=1'
+                ): .caption {{ $t('Login As Administrator') }}
               v-btn.text-none(
                 v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration'
                 color='indigo darken-2'
@@ -95,6 +86,23 @@
                 rounded
                 href='/register'
                 ): .caption {{ $t('auth:switchToRegister.link') }}
+        //-------------------------------------------------
+        //- PROVIDERS LIST
+        //-------------------------------------------------
+        template(v-if='screen === `login` && strategies.length > 1 && isAdmin')
+          .login-subtitle
+            .text-subtitle-1 {{$t('auth:selectAuthProvider')}}
+          .login-list
+            v-list.elevation-1.radius-7(nav, light)
+              v-list-item-group(v-model='selectedStrategyKey')
+                v-list-item(
+                  v-for='(stg, idx) of filteredStrategies'
+                  :key='stg.key'
+                  :value='stg.key'
+                  :color='stg.strategy.color'
+                  )
+                  v-avatar.mr-3(tile, size='24', v-html='stg.strategy.icon')
+                  span.text-none {{stg.displayName}}
         //-------------------------------------------------
         //- FORGOT PASSWORD FORM
         //-------------------------------------------------
