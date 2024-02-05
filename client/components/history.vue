@@ -192,7 +192,7 @@
         v-card-actions
           v-spacer
           v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
-          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') {{$t('history:restore.confirmButton')}}
+          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') Restore/Approve
 
     page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
 
