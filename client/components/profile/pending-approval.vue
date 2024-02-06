@@ -12,16 +12,51 @@
             v-icon.grey--text mdi-refresh
       v-flex(xs12)
         v-card.animated.fadeInUp
+          .pa-2.d-flex.align-center(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-3`')
+            v-text-field(
+              solo
+              flat
+              v-model='search'
+              prepend-inner-icon='mdi-file-search-outline'
+              label='Search Pages...'
+              hide-details
+              dense
+              style='max-width: 400px;'
+              )
+            v-spacer
+            v-select.ml-2(
+              solo
+              flat
+              hide-details
+              dense
+              label='Locale'
+              :items='langs'
+              v-model='selectedLang'
+              style='max-width: 250px;'
+            )
+            v-select.ml-2(
+              solo
+              flat
+              hide-details
+              dense
+              label='Approval Status'
+              :items='status'
+              v-model='selectedStatus'
+              style='max-width: 250px;'
+            )
+          v-divider
           v-data-table(
-            :items='pages'
+            :items='filteredPages'
             :headers='headers'
+            :search='search'
             :page.sync='pagination'
-            :items-per-page='15'
+            :items-per-page='5'
             :loading='loading'
             must-sort,
             sort-by='updatedAt',
             sort-desc,
             hide-default-footer
+            @page-count="pageTotal = $event"
           )
             template(slot='item', slot-scope='props')
               tr.is-clickable(:active='props.selected', @click='goToPage(props.item.path)')
@@ -54,10 +89,39 @@ export default {
       selectedPage: {},
       pagination: 1,
       pages: [],
+      pageTotal: 0,
+      search: '',
+      selectedLang: null,
+      selectedStatus: null,
+      status: [
+        { text: 'All Status', value: null },
+        { text: 'Approved', value: true },
+        { text: 'Pending', value: false }
+      ],
       loading: false
     }
   },
   computed: {
+    filteredPages () {
+      return _.filter(this.pages, pg => {
+        if (this.selectedLang !== null && this.selectedLang !== pg.locale) {
+          return false
+        }
+        if (this.selectedStatus !== null && this.selectedStatus !== pg.adminApproval) {
+          return false
+        }
+        return true
+      })
+    },
+    langs () {
+      return _.concat({
+        text: 'All Locales',
+        value: null
+      }, _.uniqBy(this.pages, 'locale').map(pg => ({
+        text: pg.locale,
+        value: pg.locale
+      })))
+    },
     headers () {
       return [
         { text: this.$t('profile:pages.headerTitle'), value: 'title' },
@@ -65,7 +129,7 @@ export default {
         { text: 'Author Name', value: 'authorName' },
         { text: this.$t('profile:pages.headerCreatedAt'), value: 'createdAt', width: 250 },
         { text: this.$t('profile:pages.headerUpdatedAt'), value: 'updatedAt', width: 250 },
-        { text: 'Approval', value: 'approval' }
+        { text: 'Approval', value: 'adminApproval' }
 
       ]
     },
