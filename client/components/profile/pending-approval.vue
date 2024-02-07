@@ -50,7 +50,7 @@
             :headers='headers'
             :search='search'
             :page.sync='pagination'
-            :items-per-page='5'
+            :items-per-page='15'
             :loading='loading'
             must-sort,
             sort-by='updatedAt',

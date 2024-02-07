@@ -58,7 +58,7 @@
                           v-list-item-title Download Version
                         v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
-                          v-list-item-title Restore / Approve
+                          v-list-item-title Make Live
                         v-list-item(@click='branchOff(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-source-branch
                           v-list-item-title Branch off from here
@@ -82,6 +82,7 @@
                       ): strong B
 
             v-chip.my-0.ml-6(
+              v-if='checkPendingApprovalList()'
               label
               small
               :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
@@ -128,7 +129,7 @@
                           v-list-item-title Download Version
                         v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
-                          v-list-item-title Restore / Approve
+                          v-list-item-title Make Live
                         v-list-item(@click='branchOff(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-source-branch
                           v-list-item-title Branch off from here
@@ -184,15 +185,15 @@
 
     v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
       v-card
-        .dialog-header.is-orange Restore/Approve page version?
+        .dialog-header.is-orange Make the page version Live?
         v-card-text.pa-4
-          span Are you sure you want to restore/approve this page content as it was on
+          span Are you sure you want to make live this page content as it was on
             strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
           span ? This version will be copied on top of the current history. As such, newer versions will still be preserved.
         v-card-actions
           v-spacer
           v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
-          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') Restore/Approve
+          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') Make Live
 
     page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
 
@@ -586,6 +587,15 @@ export default {
           return this.$vuetify.theme.dark ? 'orange darken-3' : 'orange lighten-5'
         default:
           return this.$vuetify.theme.dark ? 'grey darken-3' : 'grey lighten-4'
+      }
+    },
+    // Check for pending approval data
+    checkPendingApprovalList() {
+      const pendingApprovalData = _.find(this.trail, { adminApproval: false })
+      if (pendingApprovalData) {
+        return true
+      } else {
+        return false
       }
     }
   },
