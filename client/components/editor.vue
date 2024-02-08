@@ -184,6 +184,7 @@ export default {
     currentPageTitle: sync('page/title'),
     checkoutDateActive: sync('editor/checkoutDateActive'),
     currentStyling: get('page/scriptCss'),
+    userPermission: get('user/permissions'),
     isDirty () {
       return _.some([
         this.initContentParsed !== this.$store.get('editor/content'),
@@ -306,6 +307,7 @@ export default {
                 $scriptJs: String
                 $tags: [String]!
                 $title: String!
+                $adminApproval: Boolean!
               ) {
                 pages {
                   create(
@@ -322,6 +324,7 @@ export default {
                     scriptJs: $scriptJs
                     tags: $tags
                     title: $title
+                    adminApproval: $adminApproval
                   ) {
                     responseResult {
                       succeeded
@@ -350,7 +353,8 @@ export default {
               scriptCss: this.$store.get('page/scriptCss'),
               scriptJs: this.$store.get('page/scriptJs'),
               tags: this.$store.get('page/tags'),
-              title: this.$store.get('page/title')
+              title: this.$store.get('page/title'),
+              adminApproval: this.userPermission.includes('manage:system')
             }
           })
           resp = _.get(resp, 'data.pages.create', {})
@@ -410,6 +414,7 @@ export default {
                 $scriptJs: String
                 $tags: [String]
                 $title: String
+                $adminApproval: Boolean
               ) {
                 pages {
                   update(
@@ -427,6 +432,7 @@ export default {
                     scriptJs: $scriptJs
                     tags: $tags
                     title: $title
+                    adminApproval: $adminApproval
                   ) {
                     responseResult {
                       succeeded
@@ -455,7 +461,8 @@ export default {
               scriptCss: this.$store.get('page/scriptCss'),
               scriptJs: this.$store.get('page/scriptJs'),
               tags: this.$store.get('page/tags'),
-              title: this.$store.get('page/title')
+              title: this.$store.get('page/title'),
+              adminApproval: this.userPermission.includes('manage:system')
             }
           })
           resp = _.get(resp, 'data.pages.update', {})

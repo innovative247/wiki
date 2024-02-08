@@ -47,6 +47,16 @@ module.exports = {
       }
     },
     /**
+     * MODIFIED PAGE VERSION
+     */
+    async modifiedlist(obj, args, context, info) {
+      const data = await WIKI.models.pageHistory.allModifyVersion({
+        authorId: args.authorId,
+        admin: args.admin
+      })
+      return data
+    },
+    /**
      * SEARCH PAGES
      */
     async search (obj, args, context) {
@@ -473,6 +483,22 @@ module.exports = {
       }
     },
     /**
+     * APPROVE NEW PAGE
+     */
+    async approveNewPage(obj, args, context) {
+      try {
+        await WIKI.models.pageHistory.approveNewPageVersion({
+          ...args,
+          user: context.req.user
+        })
+        return {
+          responseResult: graphHelper.generateSuccess('Successfully Approve the new page')
+        }
+      } catch (err) {
+        return graphHelper.generateError(err)
+      }
+    },
+    /**
      * DELETE TAG
      */
     async deleteTag (obj, args, context) {
@@ -596,7 +622,8 @@ module.exports = {
           ...targetVersion,
           id: targetVersion.pageId,
           user: context.req.user,
-          action: 'restored'
+          action: 'restored',
+          adminApproval: true
         })
 
         return {

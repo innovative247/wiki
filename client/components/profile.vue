@@ -21,6 +21,10 @@
         //-   v-list-item-content
         //-     v-list-item-title {{$t('profile:comments.title')}}
         //-     v-list-item-subtitle.caption.grey--text.text--lighten-1 Coming soon
+        v-list-item(to='/pending-approval', color='primary')
+          v-list-item-action: v-icon mdi-file-clock-outline
+          v-list-item-content
+            v-list-item-title Pending Approval
 
     v-content(:class='$vuetify.theme.dark ? "grey darken-4" : "grey lighten-5"')
       transition(name='profile-router')
@@ -33,7 +37,8 @@
 
 <script>
 import VueRouter from 'vue-router'
-
+import { get } from 'vuex-pathify'
+// import _ from 'lodash'
 /* global WIKI */
 
 const router = new VueRouter({
@@ -43,7 +48,8 @@ const router = new VueRouter({
     { path: '/', redirect: '/profile' },
     { path: '/profile', component: () => import(/* webpackChunkName: "profile" */ './profile/profile.vue') },
     { path: '/pages', component: () => import(/* webpackChunkName: "profile" */ './profile/pages.vue') },
-    { path: '/comments', component: () => import(/* webpackChunkName: "profile" */ './profile/comments.vue') }
+    { path: '/comments', component: () => import(/* webpackChunkName: "profile" */ './profile/comments.vue') },
+    { path: '/pending-approval', component: () => import(/* webpackChunkName: "profile" */ './profile/pending-approval.vue') }
   ]
 })
 
@@ -62,6 +68,12 @@ export default {
     return {
       profileDrawerShown: true
     }
+  },
+  computed: {
+    permissions: get('user/permissions')
+    // isAdmin () {
+    //   return _.intersection(this.permissions, ['manage:system']).length > 0
+    // }
   },
   router,
   created() {

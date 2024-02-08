@@ -24,6 +24,7 @@
               )
               v-timeline-item.pb-2(
                 v-for='(ph, idx) in fullTrail'
+                v-if='ph.adminApproval !== false'
                 :key='ph.versionId'
                 :small='ph.actionType === `edit`'
                 :color='trailColor(ph.actionType)'
@@ -57,7 +58,7 @@
                           v-list-item-title Download Version
                         v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
-                          v-list-item-title Restore
+                          v-list-item-title Make Live
                         v-list-item(@click='branchOff(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-source-branch
                           v-list-item-title Branch off from here
@@ -76,7 +77,78 @@
                       small
                       depressed
                       tile
-                      :class='diffTarget === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
+                      :class='diffTarget === ph.versionId ? `green white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
+                      :disabled='ph.versionId <= diffSource && ph.versionId !== 0'
+                      ): strong B
+
+            v-chip.my-0.ml-6(
+              v-if='checkPendingApprovalList()'
+              label
+              small
+              :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
+              :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
+              )
+              span Pending Approval
+
+            v-timeline(
+              dense
+              )
+              v-timeline-item.pb-2(
+                v-for='(ph, idx) in fullTrail'
+                v-if='ph.adminApproval === false'
+                :key='ph.versionId'
+                :small='ph.actionType === `edit`'
+                :color='trailColor(ph.actionType)'
+                :icon='trailIcon(ph.actionType)'
+                )
+                v-card.radius-7(flat, :class='trailBgColor(ph.actionType)')
+                  v-toolbar(flat, :color='trailBgColor(ph.actionType)', height='40')
+                    .caption(:title='$options.filters.moment(ph.versionDate, `LLL`)') {{ ph.versionDate | moment('ll') }}
+                    v-divider.mx-3(vertical)
+                    .caption(v-if='ph.actionType === `edit`') Edited by #[strong {{ ph.authorName }}]
+                    //- .caption(v-else-if='ph.actionType === `move`') Moved from #[strong {{ph.valueBefore}}] to #[strong {{ph.valueAfter}}] by #[strong {{ ph.authorName }}]
+                    //- .caption(v-else-if='ph.actionType === `live`') Last Edited by #[strong {{ ph.authorName }}]
+                    //- .caption(v-else-if='ph.actionType === `initial`') Created by #[strong {{ ph.authorName }}]
+                    //- .caption(v-else) Unknown Action by #[strong {{ ph.authorName }}]
+                    v-spacer
+                    v-menu(offset-x, left)
+                      template(v-slot:activator='{ on }')
+                        v-btn.mr-2.radius-4(icon, v-on='on', small, tile): v-icon mdi-dots-horizontal
+                      v-list(dense, nav).history-promptmenu
+                        v-list-item(@click='setDiffSource(ph.versionId)', :disabled='(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0')
+                          v-list-item-avatar(size='24'): v-avatar A
+                          v-list-item-title Set as Differencing Source
+                        v-list-item(@click='setDiffTarget(ph.versionId)', :disabled='ph.versionId <= diffSource && ph.versionId !== 0')
+                          v-list-item-avatar(size='24'): v-avatar B
+                          v-list-item-title Set as Differencing Target
+                        v-list-item(@click='viewSource(ph.versionId)')
+                          v-list-item-avatar(size='24'): v-icon mdi-code-tags
+                          v-list-item-title View Source
+                        v-list-item(@click='download(ph.versionId)')
+                          v-list-item-avatar(size='24'): v-icon mdi-cloud-download-outline
+                          v-list-item-title Download Version
+                        v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
+                          v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
+                          v-list-item-title Make Live
+                        v-list-item(@click='branchOff(ph.versionId)')
+                          v-list-item-avatar(size='24'): v-icon mdi-source-branch
+                          v-list-item-title Branch off from here
+                    v-btn.mr-2.radius-4(
+                      @click='setDiffSource(ph.versionId)'
+                      icon
+                      small
+                      depressed
+                      tile
+                      :class='diffSource === ph.versionId ? `pink white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
+                      :disabled='(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0'
+                      ): strong A
+                    v-btn.mr-0.radius-4(
+                      @click='setDiffTarget(ph.versionId)'
+                      icon
+                      small
+                      depressed
+                      tile
+                      :class='diffTarget === ph.versionId ? `green white--text` : ($vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`)'
                       :disabled='ph.versionId <= diffSource && ph.versionId !== 0'
                       ): strong B
 
@@ -113,14 +185,15 @@
 
     v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
       v-card
-        .dialog-header.is-orange {{$t('history:restore.confirmTitle')}}
+        .dialog-header.is-orange Make the page version Live?
         v-card-text.pa-4
-          i18next(tag='span', path='history:restore.confirmText')
+          span Are you sure you want to make live this page content as it was on
             strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
+          span ? This version will be copied on top of the current history. As such, newer versions will still be preserved.
         v-card-actions
           v-spacer
           v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
-          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') {{$t('history:restore.confirmButton')}}
+          v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') Make Live
 
     page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
 
@@ -515,6 +588,15 @@ export default {
         default:
           return this.$vuetify.theme.dark ? 'grey darken-3' : 'grey lighten-4'
       }
+    },
+    // Check for pending approval data
+    checkPendingApprovalList() {
+      const pendingApprovalData = _.find(this.trail, { adminApproval: false })
+      if (pendingApprovalData) {
+        return true
+      } else {
+        return false
+      }
     }
   },
   apollo: {
@@ -528,6 +610,7 @@ export default {
                 authorId
                 authorName
                 actionType
+                adminApproval
                 valueBefore
                 valueAfter
                 versionDate
