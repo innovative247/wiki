@@ -461,13 +461,72 @@ router.get('/_userav/:uid', async (req, res, next) => {
  */
 router.get('/*', async (req, res, next) => {
   if (!req.cookies.jwt) {
-    res.redirect('/login')
+    const stg = await WIKI.models.authentication.getStrategyKey('custom')
+    const response = await axios.post(stg.config.authURL, {
+      'token': req.query.token ?? ''
+    }, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      validateStatus: function (status) {
+        return status < 505 // Resolve only if the status code is less than 500
+      }
+    })
+    if (response.status === 200 && response.data && response.data.name && response.data.email) {
+      const authResult = await WIKI.models.users.login({
+        strategy: stg.key,
+        token: req.query.token
+      }, { req, res })
+      res.cookie('jwt', authResult.jwt, { expires: moment().add(1, 'y').toDate() })
+      const parsedUrl = new URL(req.url, 'https://wiki.innovative247.com')
+      const queryParams = new URLSearchParams(parsedUrl.search)
+      queryParams.delete('token')
+      let modifiedUrl = parsedUrl.pathname
+      if (queryParams.toString()) {
+        let hashValue = ''
+        if (queryParams.get('hash')) {
+          hashValue = queryParams.get('hash')
+          queryParams.delete('hash')
+        }
+        if (queryParams.toString()) {
+          modifiedUrl = modifiedUrl + '?' + queryParams.toString()
+        }
+        if (hashValue !== '') {
+          modifiedUrl = modifiedUrl + `#${hashValue}`
+        }
+      }
+      res.redirect(modifiedUrl)
+    } else {
+      const parsedUrl = new URL(req.url, 'https://wiki.innovative247.com')
+      const queryParams = new URLSearchParams(parsedUrl.search)
+      if (parsedUrl.pathname !== '/') {
+        queryParams.delete('token')
+        let modifiedUrl = parsedUrl.pathname
+        if (queryParams.toString()) {
+          let hashValue = ''
+          if (queryParams.get('hash')) {
+            hashValue = queryParams.get('hash')
+            queryParams.delete('hash')
+          }
+          if (queryParams.toString()) {
+            modifiedUrl = modifiedUrl + '?' + queryParams.toString()
+          }
+          if (hashValue !== '') {
+            modifiedUrl = modifiedUrl + `#${hashValue}`
+          }
+        }
+        res.cookie('redirectUrl', modifiedUrl)
+      }
+      res.redirect('/login')
+    }
   }
   const stripExt = _.some(WIKI.config.pageExtensions, ext => _.endsWith(req.path, `.${ext}`))
   const pageArgs = pageHelper.parsePath(req.path, { stripExt })
   const isPage = (stripExt || pageArgs.path.indexOf('.') === -1)
   if (req.cookies.redirectUrl) {
-    res.redirect(req.cookies.redirectUrl)
+    const route = req.cookies.redirectUrl
+    res.clearCookie('redirectUrl')
+    res.redirect(route)
   }
   if (isPage) {
     if (WIKI.config.lang.namespacing && !pageArgs.explicitLocale) {
