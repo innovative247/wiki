@@ -460,7 +460,7 @@ router.get('/_userav/:uid', async (req, res, next) => {
  * View document / asset
  */
 router.get('/*', async (req, res, next) => {
-  if (!req.cookies.jwt) {
+  if (!req.cookies.jwt || req.query.token) {
     const stg = await WIKI.models.authentication.getStrategyKey('custom')
     const response = await axios.post(stg.config.authURL, {
       'token': req.query.token ?? ''
@@ -517,6 +517,8 @@ router.get('/*', async (req, res, next) => {
         }
         res.cookie('redirectUrl', modifiedUrl)
       }
+      res.clearCookie('jwt')
+      res.clearCookie('googtrans')
       res.redirect('/login')
     }
   }
