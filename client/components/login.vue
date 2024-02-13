@@ -73,7 +73,7 @@
                 href='https://support.innovative247.com/#forgot'
                 target="_blank"
                 ): .caption {{ $t('auth:forgotPasswordLink') }}
-              .text-center.mt-5
+            .text-center.mt-5
               v-btn.text-none(
                 v-if='!isAdmin'
                 text
@@ -81,7 +81,7 @@
                 color='grey darken-3'
                 href='/login?all=1'
                 ): .caption {{ $t('Login As Administrator') }}
-              .text-center.mt-5
+            .text-center.mt-5
               v-btn.text-none(
                 v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration'
                 color='indigo darken-2'
