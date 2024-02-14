@@ -70,7 +70,7 @@
                 td {{ props.item.createdAt | moment('calendar') }}
                 td {{ props.item.updatedAt | moment('calendar') }}
                 td
-                  span(:class='!props.item.adminApproval ? `yellow approve-span` : `green approve-span`') {{ !props.item.adminApproval ? `Pending`:`Approved`}}
+                  span(:class='props.item.adminApproval === null ? `red approve-span` : props.item.adminApproval === false ? `yellow approve-span` : `green approve-span`') {{ props.item.adminApproval === null ? 'Rejected' : props.item.adminApproval === false ? `Pending` : `Approved`}}
 
             template(slot='no-data')
               v-alert.ma-3(icon='mdi-alert', :value='true', outlined, color='grey')
@@ -92,9 +92,10 @@ export default {
       pageTotal: 0,
       search: '',
       selectedLang: null,
-      selectedStatus: null,
+      selectedStatus: false,
       status: [
-        { text: 'All Status', value: null },
+        { text: 'All Status', value: '' },
+        { text: 'Rejected', value: null },
         { text: 'Approved', value: true },
         { text: 'Pending', value: false }
       ],
@@ -107,7 +108,7 @@ export default {
         if (this.selectedLang !== null && this.selectedLang !== pg.locale) {
           return false
         }
-        if (this.selectedStatus !== null && this.selectedStatus !== pg.adminApproval) {
+        if (this.selectedStatus !== '' && this.selectedStatus !== pg.adminApproval) {
           return false
         }
         return true
