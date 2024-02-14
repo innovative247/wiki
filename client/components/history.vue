@@ -187,7 +187,7 @@
       v-card
         .dialog-header.is-orange Make the page version Live?
         v-card-text.pa-4
-          span Are you sure you want to make live this page content as it was on
+          span Are you sure you want to make live this page content as it was on &nbsp;
             strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
           span ? This version will be copied on top of the current history. As such, newer versions will still be preserved.
         v-card-actions

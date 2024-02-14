@@ -23,7 +23,7 @@
         //-------------------------------------------------
         template(v-if='screen === `login` && selectedStrategy.strategy.useForm')
           .login-subtitle
-            .text-subtitle-1 {{$t('auth:enterCredentials')}}
+            .text-subtitle-1 {{!selectedStrategyKey?'':selectedStrategyKey === `local`?'Enter your Wiki Administrator credentials':'Enter your SR Manager credentials'}}
           .login-form
             v-text-field(
               solo
@@ -63,6 +63,7 @@
               dark
               @click='login'
               :loading='isLoading'
+              :disabled='!selectedStrategyKey'
               ) {{ $t('auth:actions.login') }}
             .text-center.mt-5
               v-btn.text-none(
@@ -72,6 +73,7 @@
                 href='https://support.innovative247.com/#forgot'
                 target="_blank"
                 ): .caption {{ $t('auth:forgotPasswordLink') }}
+            .text-center.mt-5
               v-btn.text-none(
                 v-if='!isAdmin'
                 text
@@ -79,6 +81,7 @@
                 color='grey darken-3'
                 href='/login?all=1'
                 ): .caption {{ $t('Login As Administrator') }}
+            .text-center.mt-5
               v-btn.text-none(
                 v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration'
                 color='indigo darken-2'
@@ -337,6 +340,7 @@ export default {
       }
     },
     selectedStrategyKey (newValue, oldValue) {
+      newValue = newValue || oldValue
       this.selectedStrategy = _.find(this.strategies, ['key', newValue])
       if (this.screen === 'changePwd') {
         return
