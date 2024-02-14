@@ -92,9 +92,10 @@ export default {
       pageTotal: 0,
       search: '',
       selectedLang: null,
-      selectedStatus: null,
+      selectedStatus: false,
       status: [
-        { text: 'All Status', value: null },
+        { text: 'All Status', value: '' },
+        { text: 'Rejected', value: null },
         { text: 'Approved', value: true },
         { text: 'Pending', value: false }
       ],
@@ -107,7 +108,7 @@ export default {
         if (this.selectedLang !== null && this.selectedLang !== pg.locale) {
           return false
         }
-        if (this.selectedStatus !== null && this.selectedStatus !== pg.adminApproval) {
+        if (this.selectedStatus !== '' && this.selectedStatus !== pg.adminApproval) {
           return false
         }
         return true
