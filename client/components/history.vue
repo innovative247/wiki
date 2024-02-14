@@ -24,7 +24,7 @@
               )
               v-timeline-item.pb-2(
                 v-for='(ph, idx) in fullTrail'
-                v-if='ph.adminApproval !== false'
+                v-if='ph.adminApproval !== false && ph.adminApproval !== null'
                 :key='ph.versionId'
                 :small='ph.actionType === `edit`'
                 :color='trailColor(ph.actionType)'
@@ -95,7 +95,7 @@
               )
               v-timeline-item.pb-2(
                 v-for='(ph, idx) in fullTrail'
-                v-if='ph.adminApproval === false'
+                v-if='ph.adminApproval === false && ph.adminApproval !== null'
                 :key='ph.versionId'
                 :small='ph.actionType === `edit`'
                 :color='trailColor(ph.actionType)'
@@ -130,6 +130,9 @@
                         v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
                           v-list-item-title Make Live
+                        v-list-item(@click='reject(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
+                          v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-close-circle-outline
+                          v-list-item-title Reject this version
                         v-list-item(@click='branchOff(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-source-branch
                           v-list-item-title Branch off from here
@@ -194,6 +197,17 @@
           v-spacer
           v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
           v-btn(color='orange darken-2', dark, @click='restoreConfirm', :loading='restoreLoading') Make Live
+
+    v-dialog(v-model='isRejectConfirmDialogShown', max-width='650', persistent)
+      v-card
+        .dialog-header.is-orange Reject the page version?
+        v-card-text.pa-4
+          span Are you sure you want to reject this page content as it was on &nbsp;
+            strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
+        v-card-actions
+          v-spacer
+          v-btn(text, @click='isRejectConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
+          v-btn(color='orange darken-2', dark, @click='rejectConfirm', :loading='restoreLoading') Reject
 
     page-selector(mode='create', v-model='branchOffOpts.modal', :open-handler='branchOffHandle', :path='branchOffOpts.path', :locale='branchOffOpts.locale')
 
@@ -296,6 +310,7 @@ export default {
         modal: false
       },
       isRestoreConfirmDialogShown: false,
+      isRejectConfirmDialogShown: false,
       restoreLoading: false
     }
   },
@@ -456,6 +471,13 @@ export default {
       }
       this.isRestoreConfirmDialogShown = true
     },
+    reject (versionId, versionDate) {
+      this.restoreTarget = {
+        versionId,
+        versionDate
+      }
+      this.isRejectConfirmDialogShown = true
+    },
     async restoreConfirm () {
       this.restoreLoading = true
       this.$store.commit(`loadingStart`, 'history-restore')
@@ -501,6 +523,53 @@ export default {
         })
       }
       this.$store.commit(`loadingStop`, 'history-restore')
+      this.restoreLoading = false
+    },
+    async rejectConfirm () {
+      this.restoreLoading = true
+      this.$store.commit(`loadingStart`, 'history-restore')
+      try {
+        const resp = await this.$apollo.mutate({
+          mutation: gql`
+            mutation ($pageId: Int!, $versionId: Int!) {
+              pages {
+                reject (pageId: $pageId, versionId: $versionId) {
+                  responseResult {
+                    succeeded
+                    errorCode
+                    slug
+                    message
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            versionId: this.restoreTarget.versionId,
+            pageId: this.pageId
+          }
+        })
+        if (_.get(resp, 'data.pages.reject.responseResult.succeeded', false) === true) {
+          this.$store.commit('showNotification', {
+            style: 'success',
+            message: this.$t('history:reject.success'),
+            icon: 'check'
+          })
+          this.isRejectConfirmDialogShown = false
+          setTimeout(() => {
+            window.location.assign(`/${this.locale}/${this.path}`)
+          }, 1000)
+        } else {
+          throw new Error(_.get(resp, 'data.pages.reject.responseResult.message', 'An unexpected error occurred'))
+        }
+      } catch (err) {
+        this.$store.commit('showNotification', {
+          style: 'red',
+          message: err.message,
+          icon: 'alert'
+        })
+      }
+      this.$store.commit(`loadingStop`, 'history-reject')
       this.restoreLoading = false
     },
     branchOff (versionId) {

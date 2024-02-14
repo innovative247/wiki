@@ -70,7 +70,7 @@
                 td {{ props.item.createdAt | moment('calendar') }}
                 td {{ props.item.updatedAt | moment('calendar') }}
                 td
-                  span(:class='!props.item.adminApproval ? `yellow approve-span` : `green approve-span`') {{ !props.item.adminApproval ? `Pending`:`Approved`}}
+                  span(:class='props.item.adminApproval === null ? `red approve-span` : props.item.adminApproval === false ? `yellow approve-span` : `green approve-span`') {{ props.item.adminApproval === null ? 'Rejected' : props.item.adminApproval === false ? `Pending` : `Approved`}}
 
             template(slot='no-data')
               v-alert.ma-3(icon='mdi-alert', :value='true', outlined, color='grey')

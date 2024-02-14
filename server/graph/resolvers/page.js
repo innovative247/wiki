@@ -634,6 +634,38 @@ module.exports = {
       }
     },
     /**
+     * REJECT PAGE VERSION
+     */
+    async reject (obj, args, context) {
+      try {
+        const page = await WIKI.models.pages.query().select('path', 'localeCode').findById(args.pageId)
+        if (!page) {
+          throw new WIKI.Error.PageNotFound()
+        }
+
+        if (!WIKI.auth.checkAccess(context.req.user, ['write:pages', 'edit:pages'], {
+          path: page.path,
+          locale: page.localeCode
+        })) {
+          throw new WIKI.Error.PageRestoreForbidden()
+        }
+
+        const targetVersion = await WIKI.models.pageHistory.getVersion({ pageId: args.pageId, versionId: args.versionId })
+        if (!targetVersion) {
+          throw new WIKI.Error.PageNotFound()
+        }
+        await WIKI.models.pageHistory.query().patch({
+          adminApproval: null
+        }).where({'pageId': targetVersion.pageId, 'id': targetVersion.versionId})
+
+        return {
+          responseResult: graphHelper.generateSuccess('Page version rejected successfully.')
+        }
+      } catch (err) {
+        return graphHelper.generateError(err)
+      }
+    },
+    /**
      * Purge history
      */
     async purgeHistory (obj, args, context) {
