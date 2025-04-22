@@ -42,7 +42,7 @@
             )
             template(slot='item', slot-scope='props')
               v-icon(v-if='props.item.path === "/"', small, @click='goHome') mdi-home
-              v-btn.ma-0(v-else, :href='props.item.path', small, text) {{props.item.name}}
+              v-btn.ma-0(v-else, @click='onItemClick(props.item)', small, text) {{props.item.name}}
           template(v-if='!isPublished')
             v-spacer
             .caption.red--text {{$t('common:page.unpublished')}}
@@ -366,6 +366,8 @@ import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
 import ClipboardJS from 'clipboard'
 import Vue from 'vue'
+import gql from 'graphql-tag'
+
 
 Vue.component('Tabset', Tabset)
 
@@ -502,6 +504,12 @@ export default {
         offset: 0,
         easing: 'easeInOutCubic'
       },
+      localParents: [],
+    currentParent: {
+        id: 0,
+        title: '/ (root)'
+      },
+      loadedCache: [],
       scrollStyle: {
         vuescroll: {},
         scrollPanel: {
@@ -535,6 +543,9 @@ export default {
       set (val) {
 
       }
+    },
+    parents(){
+      return this.$store.state.currentParents
     },
     breadcrumbs() {
       return [{ path: '/', name: 'Home' }].concat(_.reduce(this.path.split('/'), (result, value, key) => {
@@ -670,6 +681,114 @@ export default {
           window.print()
         })
       }
+    },
+    async onItemClick(item) {
+      this.fetchBrowseItems(item)
+    },
+    
+    async fetchBrowseItems(item) {
+      this.$store.commit('loadingStart', 'browse-load')
+      async function fetchFullTree(parent = null) {
+  const resp = await this.$apollo.query({
+    query: gql`
+      query ($parent: Int, $locale: String!) {
+        pages {
+          tree(parent: $parent, mode: ALL, locale: $locale) {
+            id
+            path
+            title
+            isFolder
+            parent
+            locale
+          }
+        }
+      }
+    `,
+    fetchPolicy: 'cache-first',
+    variables: {
+      parent,
+      locale: this.locale
+    }
+  })
+
+  const nodes = resp.data.pages.tree || []
+
+  const children = await Promise.all(
+    nodes
+      .filter(n => n.isFolder)
+      .map(folder => fetchFullTree.call(this, folder.id))
+  )
+
+  return nodes.concat(...children)
+}
+const allItems = await fetchFullTree.call(this)
+function removeFirstPathSegment(path) {
+  const parts = path.split('/').filter(Boolean) // elimina vacíos por los slashes
+  return parts.slice(1).join('/') // quitamos el primero y recomponemos
+}
+const normalizedPath = removeFirstPathSegment(item.path)
+console.log('normalizedpath', normalizedPath, allItems)
+item = allItems.find(p => p.path === normalizedPath)
+
+      if (!item) {
+        item = this.currentParent
+      }
+
+      if (this.loadedCache.indexOf(item.id) < 0) {
+        this.currentItems = []
+      }
+      this.localParents = [];
+      let localItem = item;
+      console.log('item', item)
+      while (localItem && localItem.parent !== null) {
+        if(localItem.parent == 0){
+          console.log('root')
+          localItem = {
+        id: 0,
+        title: '/ (root)'
+      }
+        }else{
+      localItem = _.find(allItems, ['id', localItem.parent]);
+        }
+      if (localItem) {
+        this.localParents.unshift(localItem);  // Agregar el padre al principio
+      }
+    }
+
+      this.localParents.push(item)
+    
+      this.$store.commit('setCurrentParents', this.localParents)
+      this.currentParent = item
+
+      const resp = await this.$apollo.query({
+        query: gql`
+          query ($parent: Int, $locale: String!) {
+            pages {
+              tree(parent: $parent, mode: ALL, locale: $locale) {
+                id
+                path
+                title
+                isFolder
+                pageId
+                parent
+                locale
+              }
+            }
+          }
+        `,
+        fetchPolicy: 'cache-first',
+        variables: {
+          parent: item.id,
+          locale: this.locale
+        }
+      })
+      console.log('GraphQL response:', resp)
+      const treeItems = _.get(resp, 'data.pages.tree', [])
+      this.loadedCache = _.union(this.loadedCache, [item.id])
+      console.log('Setting currentItems in store:', _.get(resp, 'data.pages.tree', []))
+      this.$store.commit('setCurrentItems', treeItems)
+
+      this.$store.commit('loadingStop', 'browse-load')
     },
     pageEdit () {
       this.$root.$emit('pageEdit')

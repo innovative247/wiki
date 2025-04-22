@@ -96,18 +96,24 @@ export default {
   data() {
     return {
       currentMode: 'custom',
-      currentItems: [],
       currentParent: {
         id: 0,
         title: '/ (root)'
       },
-      parents: [],
+      localParents: [],
       loadedCache: []
     }
   },
   computed: {
     path: get('page/path'),
-    locale: get('page/locale')
+    locale: get('page/locale'),
+    currentItems() {
+      console.log('current items', this.$store.state.currentItems)
+    return this.$store.state.currentItems
+  },
+    parents(){
+      return this.$store.state.currentParents
+    }
   },
   methods: {
     switchMode (mode) {
@@ -128,17 +134,18 @@ export default {
       }
 
       if (item.id === 0) {
-        this.parents = []
+        this.localParents = []
       } else {
-        const flushRightIndex = _.findIndex(this.parents, ['id', item.id])
+        const flushRightIndex = _.findIndex(this.localParents, ['id', item.id])
         if (flushRightIndex >= 0) {
-          this.parents = _.take(this.parents, flushRightIndex)
+          this.localParents = _.take(this.localParents, flushRightIndex)
         }
-        if (this.parents.length < 1) {
-          this.parents.push(this.currentParent)
+        if (this.localParents.length < 1) {
+          this.localParents.push(this.currentParent)
         }
-        this.parents.push(item)
+        this.localParents.push(item)
       }
+      this.$store.commit('setCurrentParents', this.localParents)
 
       this.currentParent = item
 
@@ -165,7 +172,10 @@ export default {
         }
       })
       this.loadedCache = _.union(this.loadedCache, [item.id])
-      this.currentItems = _.get(resp, 'data.pages.tree', [])
+      console.log('Fetching for parent ID:', item.id)
+      const treeItems = _.get(resp, 'data.pages.tree', [])
+      console.log('nav-side', treeItems)
+      this.$store.commit('setCurrentItems', treeItems)
       this.$store.commit(`loadingStop`, 'browse-load')
     },
     async loadFromCurrentPath() {
@@ -210,11 +220,14 @@ export default {
         curParentId = curParent.parent
       }
 
-      this.parents = [this.currentParent, ...invertedAncestors.reverse()]
-      this.currentParent = _.last(this.parents)
+      this.localParents = [this.currentParent, ...invertedAncestors.reverse()]
+      this.$store.commit('setCurrentParents', this.localParents)
+      this.currentParent = _.last(this.localParents)
 
       this.loadedCache = [curPage.parent]
-      this.currentItems = _.filter(items, ['parent', curPage.parent])
+      const filteredItems = _.filter(items, ['parent', curPage.parent])
+      console.log('filtereditems', filteredItems)
+      this.$store.commit('setCurrentItems', filteredItems)
       this.$store.commit(`loadingStop`, 'browse-load')
     },
     goHome () {
