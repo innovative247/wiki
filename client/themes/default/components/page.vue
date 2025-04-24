@@ -727,7 +727,6 @@ function removeFirstPathSegment(path) {
   return parts.slice(1).join('/') // quitamos el primero y recomponemos
 }
 const normalizedPath = removeFirstPathSegment(item.path)
-console.log('normalizedpath', normalizedPath, allItems)
 item = allItems.find(p => p.path === normalizedPath)
 
       if (!item) {
@@ -739,10 +738,8 @@ item = allItems.find(p => p.path === normalizedPath)
       }
       this.localParents = [];
       let localItem = item;
-      console.log('item', item)
       while (localItem && localItem.parent !== null) {
         if(localItem.parent == 0){
-          console.log('root')
           localItem = {
         id: 0,
         title: '/ (root)'
@@ -782,10 +779,8 @@ item = allItems.find(p => p.path === normalizedPath)
           locale: this.locale
         }
       })
-      console.log('GraphQL response:', resp)
       const treeItems = _.get(resp, 'data.pages.tree', [])
       this.loadedCache = _.union(this.loadedCache, [item.id])
-      console.log('Setting currentItems in store:', _.get(resp, 'data.pages.tree', []))
       this.$store.commit('setCurrentItems', treeItems)
 
       this.$store.commit('loadingStop', 'browse-load')

@@ -108,7 +108,6 @@ export default {
     path: get('page/path'),
     locale: get('page/locale'),
     currentItems() {
-      console.log('current items', this.$store.state.currentItems)
     return this.$store.state.currentItems
   },
     parents(){
@@ -172,9 +171,7 @@ export default {
         }
       })
       this.loadedCache = _.union(this.loadedCache, [item.id])
-      console.log('Fetching for parent ID:', item.id)
       const treeItems = _.get(resp, 'data.pages.tree', [])
-      console.log('nav-side', treeItems)
       this.$store.commit('setCurrentItems', treeItems)
       this.$store.commit(`loadingStop`, 'browse-load')
     },
@@ -226,7 +223,6 @@ export default {
 
       this.loadedCache = [curPage.parent]
       const filteredItems = _.filter(items, ['parent', curPage.parent])
-      console.log('filtereditems', filteredItems)
       this.$store.commit('setCurrentItems', filteredItems)
       this.$store.commit(`loadingStop`, 'browse-load')
     },
