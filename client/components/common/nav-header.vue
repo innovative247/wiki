@@ -483,10 +483,9 @@ export default {
         case 'view':
         case 'history':
           this.$cookie.delete('googtrans')
-          _.delay(() => {
-            this.$cookie.set('googtrans', String(`/en/${locale.code}`))
-            window.location.assign(`/${locale.code}/${this.path}`)
-          }, 500)
+          this.$cookie.delete("googtrans", { path: '/', domain: '.innovative247.com' })
+          this.$cookie.set('googtrans', String(`/en/${locale.code}`))
+          window.location.assign(`/${locale.code}/${this.path}`)
           break
       }
     },
