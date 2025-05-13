@@ -115,34 +115,46 @@ await this.client.indices.create({
       } else if (this.config.apiVersion === '8.x' && !indexExists) {
         WIKI.logger.info(`(SEARCH/ELASTICSEARCH) Creating index...`)
         try {
-          // 8.x Doesn't support boost in mappings, so we will need to boost at query time.
-          const idxBody = {
-            properties: {
-              suggest: { type: 'completion' },
-              title: { type: 'text' },
-              description: { type: 'text' },
-              content: { type: 'text' },
-              locale: { type: 'keyword' },
-              path: { type: 'text' },
-              tags: { type: 'text' }
-            }
+const idxBody = {
+  properties: {
+    suggest: { type: "completion" },
+    title: { type: "text", boost: 10.0 },
+    description: { type: "text", boost: 3.0 },
+    content: { type: "text", boost: 1.0 },
+    locale: { type: "keyword" },
+    path: { type: "text" },
+    tags: {
+      type: "text",
+      fields: {
+        keyword: {
+          type: "keyword",
+          ignore_above: 256
+        }
+      },
+      boost: 8.0
+    }
+  }
+};
+await this.client.indices.create({
+  index: this.config.indexName,
+  body: {
+    mappings:
+      this.config.apiVersion === "6.x"
+        ? {
+            _doc: idxBody
           }
-
-          await this.client.indices.create({
-            index: this.config.indexName,
-            body: {
-              mappings: idxBody,
-              settings: {
-                analysis: {
-                  analyzer: {
-                    default: {
-                      type: this.config.analyzer
-                    }
-                  }
-                }
-              }
-            }
-          })
+        : idxBody,
+    settings: {
+      analysis: {
+        analyzer: {
+          default: {
+            type: this.config.analyzer
+          }
+        }
+      }
+    }
+  }
+})
         } catch (err) {
           WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Create Index Error: `, _.get(err, 'meta.body.error', err))
         }
