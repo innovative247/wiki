@@ -98,6 +98,7 @@
           :search='innerSearch'
           :loading='isLoading'
           :options.sync='pagination'
+          @page-count='pageTotal = $event'
           hide-default-footer
           ref='dude'
           )
@@ -184,6 +185,7 @@ export default {
         sortDesc: [false]
       },
       pages: [],
+      pageTotal: 0,
       isLoading: true,
       scrollStyle: {
         vuescroll: {},
