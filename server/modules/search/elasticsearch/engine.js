@@ -68,35 +68,46 @@ module.exports = {
       if (this.config.apiVersion !== '8.x' && !indexExists.body) {
         WIKI.logger.info(`(SEARCH/ELASTICSEARCH) Creating index...`)
         try {
-          const idxBody = {
-            properties: {
-              suggest: { type: 'completion' },
-              title: { type: 'text', boost: 10.0 },
-              description: { type: 'text', boost: 3.0 },
-              content: { type: 'text', boost: 1.0 },
-              locale: { type: 'keyword' },
-              path: { type: 'text' },
-              tags: { type: 'text', boost: 8.0 }
-            }
+const idxBody = {
+  properties: {
+    suggest: { type: "completion" },
+    title: { type: "text", boost: 10.0 },
+    description: { type: "text", boost: 3.0 },
+    content: { type: "text", boost: 1.0 },
+    locale: { type: "keyword" },
+    path: { type: "text" },
+    tags: {
+      type: "text",
+      fields: {
+        keyword: {
+          type: "keyword",
+          ignore_above: 256
+        }
+      },
+      boost: 8.0
+    }
+  }
+};
+await this.client.indices.create({
+  index: this.config.indexName,
+  body: {
+    mappings:
+      this.config.apiVersion === "6.x"
+        ? {
+            _doc: idxBody
           }
-
-          await this.client.indices.create({
-            index: this.config.indexName,
-            body: {
-              mappings: (this.config.apiVersion === '6.x') ? {
-                _doc: idxBody
-              } : idxBody,
-              settings: {
-                analysis: {
-                  analyzer: {
-                    default: {
-                      type: this.config.analyzer
-                    }
-                  }
-                }
-              }
-            }
-          })
+        : idxBody,
+    settings: {
+      analysis: {
+        analyzer: {
+          default: {
+            type: this.config.analyzer
+          }
+        }
+      }
+    }
+  }
+})
         } catch (err) {
           WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Create Index Error: `, _.get(err, 'meta.body.error', err))
         }
@@ -152,21 +163,40 @@ module.exports = {
         index: this.config.indexName,
         body: {
           query: {
-            simple_query_string: {
-              query: `*${q}*`,
-              fields: ['title^20', 'description^3', 'tags^8', 'content^1'],
-              default_operator: 'and',
-              analyze_wildcard: true
+            bool: {
+              should: [
+                {
+                  multi_match: {
+                    query: q,
+                    fields: [
+                      "title^20",
+                      "description^3",
+                      "tags^8",
+                      "content^1"
+                    ],
+                    fuzziness: "AUTO"
+                  }
+                },
+                {
+                  wildcard: {
+                    "tags.keyword": {
+                      value: `*${q.toLowerCase()}*`,
+                      boost: 5.0,
+                      case_insensitive: true
+                    }
+                  }
+                }
+              ]
             }
           },
           from: 0,
           size: 50,
-          _source: ['title', 'description', 'path', 'locale'],
+          _source: ["title", "description", "path", "locale", "tags"],
           suggest: {
             suggestions: {
               text: q,
               completion: {
-                field: 'suggest',
+                field: "suggest",
                 size: 5,
                 skip_duplicates: true,
                 fuzzy: true
@@ -174,14 +204,15 @@ module.exports = {
             }
           }
         }
-      })
+      });
       return {
         results: _.get(results, this.config.apiVersion === '8.x' ? 'hits.hits' : 'body.hits.hits', []).map(r => ({
           id: r._id,
           locale: r._source.locale,
           path: r._source.path,
           title: r._source.title,
-          description: r._source.description
+          description: r._source.description,
+          tags: r._source.tags
         })),
         suggestions: _.reject(_.get(results, 'suggest.suggestions', []).map(s => _.get(s, 'options[0].text', false)), s => !s),
         totalHits: _.get(results, this.config.apiVersion === '8.x' ? 'hits.total.value' : 'body.hits.total.value', _.get(results, this.config.apiVersion === '8.x' ? 'hits.total' : 'body.hits.total', 0))
