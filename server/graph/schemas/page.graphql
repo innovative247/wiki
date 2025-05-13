@@ -237,7 +237,7 @@ type ModifiedPage {
   content: String!
   locale: String!
   createdAt: Date!
-  updatedAt: Date!
+  updatedAt: Date
   adminApproval: Boolean
   authorId: Int! @auth(requires: ["write:pages", "edit:pages", "manage:system"])
   authorName: String! @auth(requires: ["write:pages", "edit:pages", "manage:system"])
