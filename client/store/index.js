@@ -15,53 +15,61 @@ Vue.use(Vuex)
 const state = {
   loadingStack: [],
   notification: {
-    message: '',
-    style: 'primary',
-    icon: 'cached',
+    message: "",
+    style: "primary",
+    icon: "cached",
     isActive: false
-  }
-}
+  },
+  currentItems: [],
+  currentParents: []
+};
 
 export default new Vuex.Store({
-  strict: process.env.NODE_ENV !== 'production',
-  plugins: [
-    pathify.plugin
-  ],
+  strict: process.env.NODE_ENV !== "production",
+  plugins: [pathify.plugin],
   state,
   getters: {
-    isLoading: state => { return state.loadingStack.length > 0 }
+    isLoading: state => {
+      return state.loadingStack.length > 0;
+    }
   },
   mutations: {
     ...make.mutations(state),
-    loadingStart (st, stackName) {
-      st.loadingStack = _.union(st.loadingStack, [stackName])
+    loadingStart(st, stackName) {
+      st.loadingStack = _.union(st.loadingStack, [stackName]);
     },
-    loadingStop (st, stackName) {
-      st.loadingStack = _.without(st.loadingStack, stackName)
+    loadingStop(st, stackName) {
+      st.loadingStack = _.without(st.loadingStack, stackName);
     },
-    showNotification (st, opts) {
+    showNotification(st, opts) {
       st.notification = _.defaults(opts, {
-        message: '',
-        style: 'primary',
-        icon: 'cached',
+        message: "",
+        style: "primary",
+        icon: "cached",
         isActive: true
-      })
+      });
     },
-    updateNotificationState (st, newState) {
-      st.notification.isActive = newState
+    updateNotificationState(st, newState) {
+      st.notification.isActive = newState;
     },
-    pushGraphError (st, err) {
-      WIKI.$store.commit('showNotification', {
-        style: 'red',
-        message: _.get(err, 'graphQLErrors[0].message', err.message),
-        icon: 'alert'
-      })
+    pushGraphError(st, err) {
+      WIKI.$store.commit("showNotification", {
+        style: "red",
+        message: _.get(err, "graphQLErrors[0].message", err.message),
+        icon: "alert"
+      });
+    },
+    setCurrentItems(state, items) {
+      state.currentItems = items;
+    },
+    setCurrentParents(state, items){
+      state.currentParents = items
     }
   },
-  actions: { },
+  actions: {},
   modules: {
     page,
     site,
     user
   }
-})
+});
