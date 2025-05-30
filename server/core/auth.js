@@ -469,7 +469,8 @@ module.exports = {
         manage: WIKI.auth.checkAccess(req.user, ['manage:pages'], page),
         delete: WIKI.auth.checkAccess(req.user, ['delete:pages'], page),
         script: WIKI.auth.checkAccess(req.user, ['write:scripts'], page),
-        style: WIKI.auth.checkAccess(req.user, ['write:styles'], page)
+        style: WIKI.auth.checkAccess(req.user, ['write:styles'], page),
+        approval: WIKI.auth.checkAccess(req.user, ['manage:pageApproval'], page)
       },
       system: {
         manage: WIKI.auth.checkAccess(req.user, ['manage:system'], page)
