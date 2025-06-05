@@ -72,7 +72,8 @@ export default {
   computed: {
     permissions: get('user/permissions'),
     haspageApprovalPermission() {
-    return this.permissions.includes('manage:pageApproval')
+    return this.permissions.includes('manage:pageApproval') || this.permissions.includes('manage:system');
+
   },
     // isAdmin () {
     //   return _.intersection(this.permissions, ['manage:system']).length > 0
