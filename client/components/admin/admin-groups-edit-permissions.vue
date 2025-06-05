@@ -148,6 +148,13 @@ export default {
               warning: false,
               restrictedForSystem: true,
               disabled: false
+            },
+            {
+              permission: 'manage:pageApproval',
+              hint: 'Can approve changes in edited pages waiting to be approved',
+              warning: false,
+              restrictedForSystem: true,
+              disabled: false
             }
           ]
         },

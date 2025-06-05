@@ -156,6 +156,9 @@ module.exports = {
           } else {
             res.cookie('jwt', newToken.token, { expires: DateTime.utc().plus({ days: 365 }).toJSDate() })
           }
+
+          // Avoid caching this response
+          res.set('Cache-Control', 'no-store')
         } catch (errc) {
           WIKI.logger.warn(errc)
           return next()
@@ -466,7 +469,8 @@ module.exports = {
         manage: WIKI.auth.checkAccess(req.user, ['manage:pages'], page),
         delete: WIKI.auth.checkAccess(req.user, ['delete:pages'], page),
         script: WIKI.auth.checkAccess(req.user, ['write:scripts'], page),
-        style: WIKI.auth.checkAccess(req.user, ['write:styles'], page)
+        style: WIKI.auth.checkAccess(req.user, ['write:styles'], page),
+        approval: WIKI.auth.checkAccess(req.user, ['manage:pageApproval'], page)
       },
       system: {
         manage: WIKI.auth.checkAccess(req.user, ['manage:system'], page)

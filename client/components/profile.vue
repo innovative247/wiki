@@ -21,7 +21,7 @@
         //-   v-list-item-content
         //-     v-list-item-title {{$t('profile:comments.title')}}
         //-     v-list-item-subtitle.caption.grey--text.text--lighten-1 Coming soon
-        v-list-item(to='/pending-approval', color='primary')
+        v-list-item(v-if='haspageApprovalPermission', to='/pending-approval', color='primary')
           v-list-item-action: v-icon mdi-file-clock-outline
           v-list-item-content
             v-list-item-title Pending Approval
@@ -70,7 +70,11 @@ export default {
     }
   },
   computed: {
-    permissions: get('user/permissions')
+    permissions: get('user/permissions'),
+    haspageApprovalPermission() {
+    return this.permissions.includes('manage:pageApproval') || this.permissions.includes('manage:system');
+
+  },
     // isAdmin () {
     //   return _.intersection(this.permissions, ['manage:system']).length > 0
     // }
